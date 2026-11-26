@@ -1,6 +1,6 @@
 /**
- * Vyra — Activity History Page.
- * Premium dark theme applied in-place (self-contained — no shared kit needed):
+ * Vyra - Activity History Page.
+ * Premium dark theme applied in-place (self-contained - no shared kit needed):
  * - Full-bleed aurora canvas + blueprint grid, identical to Live Monitoring.
  * - Overline header with telemetry meta (pulse dot) + two-step clear-buffer CTA.
  * - Dark panels, dark state chips, color-coded methodology cards.
@@ -17,7 +17,7 @@ import { Trash2, Users } from '../components/icons';
 
 /* ---------------- Local primitives (Vyra recipes, kept in-file) ---------------- */
 
-/** Dark panel — Card replacement: soft header strip + padded body. */
+/** Dark panel - Card replacement: soft header strip + padded body. */
 function DarkPanel({
   title,
   subtitle,
@@ -43,7 +43,7 @@ function DarkPanel({
   );
 }
 
-/** Dark button — gradient primary, ghost secondary, danger for destructive. */
+/** Dark button - gradient primary, ghost secondary, danger for destructive. */
 function DarkButton({
   variant = 'primary',
   size = 'md',
@@ -116,7 +116,7 @@ function ConfirmButton({
   );
 }
 
-/** State tone mapping — Vyra accents keyed by state keywords. */
+/** State tone mapping - Vyra accents keyed by state keywords. */
 function stateTone(state: string): string {
   const s = state.toUpperCase();
   if (s.includes('NOT_WORKING')) return 'border-rose-400/25 bg-rose-400/[0.08] text-rose-300';
@@ -129,7 +129,7 @@ function stateTone(state: string): string {
   return 'border-white/[0.08] bg-white/[0.03] text-[#96A0B0]';
 }
 
-/** Dark state chip — replaces the light StateBadge primitive. */
+/** Dark state chip - replaces the light StateBadge primitive. */
 function DarkStateBadge({ state }: { state: string }) {
   return (
     <span
@@ -140,7 +140,7 @@ function DarkStateBadge({ state }: { state: string }) {
   );
 }
 
-/** Dark-themed empty state — no gray boxes, stays on the dark canvas. */
+/** Dark-themed empty state - no gray boxes, stays on the dark canvas. */
 function EmptyBlock({
   icon,
   title,
@@ -234,12 +234,12 @@ export function ActivityPage(): JSX.Element {
         @media (prefers-reduced-motion: reduce) { .vyra-rise { animation: none; } }
       `}</style>
 
-      {/* Ambient depth: aurora glow + faint blueprint grid, fading downward — identical to Live Monitoring */}
+      {/* Ambient depth: aurora glow + faint blueprint grid, fading downward - identical to Live Monitoring */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(60%_45%_at_50%_-12%,rgba(122,162,247,0.12),transparent_70%)]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 opacity-60 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)] [background-image:linear-gradient(rgba(148,163,198,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,198,0.05)_1px,transparent_1px)] [background-size:40px_40px]" />
 
       <div className="relative flex flex-col gap-6 p-5 md:p-7 lg:p-8">
-        {/* Header — overline, title, telemetry meta, clear-buffer CTA */}
+        {/* Header - overline, title, telemetry meta, clear-buffer CTA */}
         <header className="vyra-rise flex flex-wrap items-end justify-between gap-5">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5A6474]">
@@ -329,7 +329,7 @@ export function ActivityPage(): JSX.Element {
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="truncate text-[12px] font-semibold text-[#E8ECF4]">
-                            {track.employeeId ? employeeNames.get(track.employeeId) : '—'}
+                            {track.employeeId ? employeeNames.get(track.employeeId) : '-'}
                           </span>
                           <span className="shrink-0 text-[11px] font-medium text-[#5A6474]">
                             {cameraLabel(track.cameraId)}

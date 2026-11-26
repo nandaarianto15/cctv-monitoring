@@ -1,6 +1,6 @@
 /**
- * Vyra — Employee Directory Page.
- * Premium dark theme applied in-place (self-contained — no shared kit needed):
+ * Vyra - Employee Directory Page.
+ * Premium dark theme applied in-place (self-contained - no shared kit needed):
  * - Full-bleed aurora canvas + blueprint grid, identical to Live Monitoring.
  * - Overline header with workforce meta (pulse dot) + gradient CTA.
  * - Dark panels, dark data table, dark badges/inputs, two-step delete confirm.
@@ -21,7 +21,7 @@ import type { PageId } from '../components/navigation/Sidebar';
 const INPUT_CLASS =
   'w-full rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-[12px] font-medium text-[#E8ECF4] placeholder:text-[#5A6474] outline-none transition-colors hover:border-white/[0.16] focus:border-[#7AA2F7]/40 focus:bg-[#7AA2F7]/[0.05]';
 
-/** Dark panel — Card replacement: soft header strip + padded body (or flush for tables). */
+/** Dark panel - Card replacement: soft header strip + padded body (or flush for tables). */
 function DarkPanel({
   title,
   subtitle,
@@ -49,7 +49,7 @@ function DarkPanel({
   );
 }
 
-/** Dark button — gradient primary, ghost secondary, danger for destructive. */
+/** Dark button - gradient primary, ghost secondary, danger for destructive. */
 function DarkButton({
   variant = 'primary',
   size = 'md',
@@ -122,7 +122,7 @@ function ConfirmButton({
   );
 }
 
-/** Dark pill badge — zinc (neutral) or green (live). */
+/** Dark pill badge - zinc (neutral) or green (live). */
 function DarkBadge({
   tone = 'zinc',
   dot = false,
@@ -148,7 +148,7 @@ function DarkBadge({
   );
 }
 
-/** Dark search input with inline magnifier glyph — no icon-set dependency. */
+/** Dark search input with inline magnifier glyph - no icon-set dependency. */
 function SearchInput({
   value,
   onChange,
@@ -186,7 +186,7 @@ function SearchInput({
   );
 }
 
-/** Dark-themed empty state — no gray boxes, stays on the dark canvas. */
+/** Dark-themed empty state - no gray boxes, stays on the dark canvas. */
 function EmptyBlock({
   icon,
   title,
@@ -246,12 +246,12 @@ export function EmployeesPage({ navigate: _navigate }: { navigate?: (page: PageI
         @media (prefers-reduced-motion: reduce) { .vyra-rise { animation: none; } }
       `}</style>
 
-      {/* Ambient depth: aurora glow + faint blueprint grid, fading downward — identical to Live Monitoring */}
+      {/* Ambient depth: aurora glow + faint blueprint grid, fading downward - identical to Live Monitoring */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(60%_45%_at_50%_-12%,rgba(122,162,247,0.12),transparent_70%)]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 opacity-60 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)] [background-image:linear-gradient(rgba(148,163,198,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,198,0.05)_1px,transparent_1px)] [background-size:40px_40px]" />
 
       <div className="relative flex flex-col gap-6 p-5 md:p-7 lg:p-8">
-        {/* Header — overline, title, workforce meta, gradient CTA */}
+        {/* Header - overline, title, workforce meta, gradient CTA */}
         <header className="vyra-rise flex flex-wrap items-end justify-between gap-5">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5A6474]">
@@ -393,7 +393,7 @@ export function EmployeesPage({ navigate: _navigate }: { navigate?: (page: PageI
                       editingId === employee.id ? (
                         <tr key={employee.id}>
                           <td colSpan={5} className="bg-white/[0.015] p-4 md:px-5 md:py-4">
-                            {/* Edit mode — blue-tinted inset to signal active editing */}
+                            {/* Edit mode - blue-tinted inset to signal active editing */}
                             <div className="rounded-xl border border-[#7AA2F7]/25 bg-[#7AA2F7]/[0.04] p-4">
                               <EmployeeForm
                                 initial={employee}
@@ -413,7 +413,7 @@ export function EmployeesPage({ navigate: _navigate }: { navigate?: (page: PageI
                             {employee.name}
                           </td>
                           <td className="px-5 py-3.5 text-[12px] text-[#96A0B0]">
-                            {employee.role || '—'}
+                            {employee.role || '-'}
                           </td>
                           <td className="px-5 py-3.5">
                             {employee.active ? (
@@ -425,7 +425,7 @@ export function EmployeesPage({ navigate: _navigate }: { navigate?: (page: PageI
                             )}
                           </td>
                           <td className="max-w-xs truncate px-5 py-3.5 text-[12px] text-[#67717F]">
-                            {employee.notes || '—'}
+                            {employee.notes || '-'}
                           </td>
                           <td className="px-5 py-3.5 text-right">
                             <div className="inline-flex items-center gap-2">

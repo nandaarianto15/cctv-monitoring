@@ -52,7 +52,7 @@ function DarkBadge({ tone = 'zinc', className = '', children }: {
   );
 }
 
-/** Dark native <select> — full-width, inline chevron. */
+/** Dark native <select> - full-width, inline chevron. */
 function DarkSelect({
   value,
   onChange,
@@ -130,7 +130,7 @@ function DarkSearchInput({
   );
 }
 
-/** Dark-themed empty state — no gray boxes, stays on the dark canvas. */
+/** Dark-themed empty state - no gray boxes, stays on the dark canvas. */
 function DarkEmptyState({
   icon,
   title,

@@ -1,5 +1,5 @@
 /**
- * Small per-minute event histogram (last 15 minutes) — pure SVG, no chart
+ * Small per-minute event histogram (last 15 minutes) - pure SVG, no chart
  * library. Bins by wall-clock minute.
  * Vyra dark treatment: Vyra-blue bars on the dark canvas.
  */

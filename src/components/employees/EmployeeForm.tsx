@@ -16,7 +16,7 @@ export interface EmployeeDraft {
 const INPUT_CLASS =
   'w-full rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-[12px] font-medium text-[#E8ECF4] placeholder:text-[#5A6474] outline-none transition-colors hover:border-white/[0.16] focus:border-[#7AA2F7]/40 focus:bg-[#7AA2F7]/[0.05]';
 
-/** Dark field wrapper — uppercase micro-label. */
+/** Dark field wrapper - uppercase micro-label. */
 function DarkField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -51,7 +51,7 @@ function DarkTextInput({
   );
 }
 
-/** Native checkbox restyled with accent color — crisp on dark backgrounds. */
+/** Native checkbox restyled with accent color - crisp on dark backgrounds. */
 function DarkCheckbox({
   label,
   checked,
@@ -74,7 +74,7 @@ function DarkCheckbox({
   );
 }
 
-/** Dark button — gradient primary / ghost. */
+/** Dark button - gradient primary / ghost. */
 function DarkButton({
   variant = 'primary',
   type = 'button',

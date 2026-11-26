@@ -1,6 +1,6 @@
 /**
- * Vyra — System Settings Page.
- * Premium dark theme applied in-place (self-contained — no shared kit needed):
+ * Vyra - System Settings Page.
+ * Premium dark theme applied in-place (self-contained - no shared kit needed):
  * - Full-bleed aurora canvas + blueprint grid, identical to Live Monitoring.
  * - Overline header with config sync meta + Save/Restore actions.
  * - Dark setting rows with unit-suffixed numeric steppers.
@@ -14,7 +14,7 @@ import { Check, Shield } from '../components/icons';
 
 /* ---------------- Local primitives (Vyra recipes, kept in-file) ---------------- */
 
-/** Dark panel — Card replacement: soft header strip + padded body. */
+/** Dark panel - Card replacement: soft header strip + padded body. */
 function DarkPanel({
   title,
   subtitle,
@@ -37,7 +37,7 @@ function DarkPanel({
   );
 }
 
-/** Dark button — gradient primary / ghost. */
+/** Dark button - gradient primary / ghost. */
 function DarkButton({
   variant = 'primary',
   size = 'md',
@@ -72,7 +72,7 @@ function DarkButton({
   );
 }
 
-/** Dark numeric stepper with unit suffix — mirrors the NumberInput primitive API. */
+/** Dark numeric stepper with unit suffix - mirrors the NumberInput primitive API. */
 function DarkNumberInput({
   value,
   unit,
@@ -165,12 +165,12 @@ export function SettingsPage(): JSX.Element {
         @media (prefers-reduced-motion: reduce) { .vyra-rise { animation: none; } }
       `}</style>
 
-      {/* Ambient depth: aurora glow + faint blueprint grid, fading downward — identical to Live Monitoring */}
+      {/* Ambient depth: aurora glow + faint blueprint grid, fading downward - identical to Live Monitoring */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(60%_45%_at_50%_-12%,rgba(122,162,247,0.12),transparent_70%)]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 opacity-60 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)] [background-image:linear-gradient(rgba(148,163,198,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,198,0.05)_1px,transparent_1px)] [background-size:40px_40px]" />
 
       <div className="relative flex flex-col gap-6 p-5 md:p-7 lg:p-8">
-        {/* Header — overline, title, config sync meta, actions */}
+        {/* Header - overline, title, config sync meta, actions */}
         <header className="vyra-rise flex flex-wrap items-end justify-between gap-5">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5A6474]">
