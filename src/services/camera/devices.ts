@@ -1,6 +1,6 @@
 /**
  * Device enumeration. Labels are empty until the user grants camera
- * permission once (browser privacy behavior) — the UI communicates this.
+ * permission once (browser privacy behavior) - the UI communicates this.
  */
 export interface VideoDeviceInfo {
   deviceId: string;

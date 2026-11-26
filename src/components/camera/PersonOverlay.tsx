@@ -1,6 +1,6 @@
 /**
  * Live overlay: draws desk zones (colored by desk state) and person boxes with
- * their smoothed states. Read-only — the stage is not interactive here.
+ * their smoothed states. Read-only - the stage is not interactive here.
  */
 import { Circle, Group, Layer, Line, Rect, Stage, Text } from 'react-konva';
 import type { ActivityState, DeskZone, DeskZoneView, Id, NormalizedPoint, TrackView } from '../../types';
@@ -97,7 +97,7 @@ function PersonBox({
     ? 'Zone: AMBIGUOUS'
     : track.zone.zoneName
       ? `Zone: ${track.zone.zoneName}`
-      : 'Zone: —';
+      : 'Zone: -';
   const lines = [
     `${label}${statusNote} · ${Math.round(track.confidence * 100)}%`,
     `${track.state.occupancy} · ${track.state.posture} · ${track.state.activity}`,

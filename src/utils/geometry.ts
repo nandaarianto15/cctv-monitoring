@@ -5,7 +5,7 @@
  */
 import type { NormalizedBBox, NormalizedPoint } from '../types';
 
-/** Bottom-center of a bounding box — the "foot point" used for zone containment. */
+/** Bottom-center of a bounding box - the "foot point" used for zone containment. */
 export function footPoint(bbox: NormalizedBBox): NormalizedPoint {
   return { x: bbox.x + bbox.width / 2, y: bbox.y + bbox.height };
 }

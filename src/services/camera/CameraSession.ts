@@ -100,7 +100,7 @@ async function safePlay(video: HTMLVideoElement): Promise<void> {
     await video.play();
   } catch (err) {
     // Chrome occasionally rejects play() with AbortError during setup; other
-    // failures (autoplay policy) mean no frames will flow — surface them.
+    // failures (autoplay policy) mean no frames will flow - surface them.
     if (err instanceof DOMException && err.name === 'AbortError') return;
     throw err;
   }

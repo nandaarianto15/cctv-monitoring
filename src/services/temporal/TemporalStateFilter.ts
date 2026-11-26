@@ -2,7 +2,7 @@
  * Temporal smoothing for displayed states.
  *
  * A displayed state only changes when a different raw state has been observed
- * *continuously* for `dwellMs` (hysteresis — prevents flicker). When
+ * *continuously* for `dwellMs` (hysteresis - prevents flicker). When
  * observations are missing (occlusion, detector dropout) the last displayed
  * state is held for `awayMs`; after that the filter falls back to its
  * `unknownValue` when one is configured, otherwise it keeps holding.

@@ -88,7 +88,7 @@ export function OccupancyPage({ navigate }: { navigate: (page: PageId) => void }
                         </p>
                         {!running && (
                           <p className="mt-1 text-xs text-saas-secondary">
-                            Camera offline — desk state requires a running camera.
+                            Camera offline - desk state requires a running camera.
                           </p>
                         )}
                       </div>

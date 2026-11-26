@@ -11,7 +11,7 @@ import {
   type ReactNode,
   type SelectHTMLAttributes,
 } from 'react';
-import { AlertCircle } from '../icons';
+import { AlertCircle, ChevronDown } from '../icons';
 
 // --- Card ---------------------------------------------------------------------
 
@@ -282,9 +282,7 @@ export function SelectInput(props: SelectHTMLAttributes<HTMLSelectElement>) {
     <div className="relative">
       <select className={`${inputClass} appearance-none pr-8 cursor-pointer`} {...props} />
       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-saas-secondary">
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-        </svg>
+        <ChevronDown size={16} strokeWidth={2} />
       </div>
     </div>
   );

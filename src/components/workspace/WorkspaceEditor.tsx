@@ -3,28 +3,232 @@
  * offline) stage. Coordinates are normalized (0..1) and persisted per cameraId
  * through the repository. Foot-point containment + zone priority drive
  * occupancy matching (see services/workspace/zoneMatcher).
+ *
+ * Vyra dark treatment (self-contained): dark panels, inputs, buttons and
+ * badges are defined in-file; konva zone palette remapped to Vyra accents.
  */
 import { useEffect, useState } from 'react';
+import type { ChangeEvent, ReactNode } from 'react';
 import { Circle, Group, Layer, Line, Stage, Text } from 'react-konva';
 import type { Camera, DeskZone, Id, NormalizedPoint } from '../../types';
 import { useVision } from '../../state/VisionContext';
 import { useCameraSnapshot, useZones } from '../../hooks/useVision';
-import { Badge, Button, Card, ConfirmButton, EmptyState, Field, NumberInput, TextInput } from '../ui/primitives';
 import { CameraStage } from '../camera/CameraStage';
 import { clamp01, isValidZonePolygon } from '../../utils/geometry';
 import { createId } from '../../utils/id';
 import { Layers, Plus } from '../icons';
 
+/* ---------------- Konva palette - remapped to Vyra accents ---------------- */
+
 const VERTEX_RADIUS = 6;
-const ZONE_STROKE = '#5277A8';
-const ZONE_FILL = 'rgba(82, 119, 168, 0.14)';
-const SELECTED_STROKE = '#2F8A65';
-const SELECTED_FILL = 'rgba(47, 138, 101, 0.18)';
-const DRAFT_STROKE = '#C18A3C';
+const ZONE_STROKE = '#7AA2F7'; // Vyra blue
+const ZONE_FILL = 'rgba(122, 162, 247, 0.12)';
+const SELECTED_STROKE = '#4ADE80'; // Vyra green
+const SELECTED_FILL = 'rgba(74, 222, 128, 0.14)';
+const DRAFT_STROKE = '#F0B26B'; // warm amber for in-progress draft
+const VERTEX_RING = '#F2F5FA';
 const STROKE_WIDTH = 2;
 const SELECTED_STROKE_WIDTH = 2.5;
 const LABEL_FONT_SIZE = 12;
 const VERTEX_OFFSET = 8;
+
+/* ---------------- Local dark primitives (Vyra recipes, kept in-file) ---------------- */
+
+const INPUT_CLASS =
+  'w-full rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-[12px] font-medium text-[#E8ECF4] placeholder:text-[#5A6474] outline-none transition-colors hover:border-white/[0.16] focus:border-[#7AA2F7]/40 focus:bg-[#7AA2F7]/[0.05]';
+
+/** Dark panel - the Card replacement: soft header strip + body. */
+function DarkPanel({
+  title,
+  subtitle,
+  actions,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  actions?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] bg-white/[0.015] px-5 py-3.5">
+        <div className="min-w-0">
+          <h3 className="truncate text-[13px] font-semibold text-[#E8ECF4]">{title}</h3>
+          {subtitle && <p className="mt-0.5 text-[11.5px] text-[#5A6474]">{subtitle}</p>}
+        </div>
+        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      </header>
+      <div className="p-4 md:p-5">{children}</div>
+    </section>
+  );
+}
+
+/** Dark pill badge - zinc (neutral) or green (live). */
+function DarkBadge({
+  tone = 'zinc',
+  dot = false,
+  children,
+}: {
+  tone?: 'zinc' | 'green';
+  dot?: boolean;
+  children: ReactNode;
+}) {
+  const tones = {
+    zinc: 'border-white/[0.08] bg-white/[0.03] text-[#96A0B0]',
+    green: 'border-[#4ADE80]/25 bg-[#4ADE80]/[0.08] text-[#4ADE80]',
+  } as const;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${tones[tone]}`}
+    >
+      {dot && (
+        <span className={`h-1.5 w-1.5 rounded-full ${tone === 'green' ? 'animate-pulse bg-[#4ADE80]' : 'bg-[#5A6474]'}`} />
+      )}
+      {children}
+    </span>
+  );
+}
+
+/** Dark button - gradient primary, ghost secondary, danger for destructive. */
+function DarkButton({
+  variant = 'primary',
+  size = 'md',
+  disabled = false,
+  icon,
+  children,
+  onClick,
+}: {
+  variant?: 'primary' | 'ghost' | 'danger';
+  size?: 'sm' | 'md';
+  disabled?: boolean;
+  icon?: ReactNode;
+  children: ReactNode;
+  onClick?: () => void;
+}) {
+  const sizes = {
+    sm: 'px-3 py-1.5 text-[11.5px]',
+    md: 'px-3.5 py-2 text-[12px]',
+  } as const;
+  const variants = {
+    primary:
+      'bg-gradient-to-r from-[#5D87E8] to-[#7AA2F7] text-white shadow-[0_10px_28px_-10px_rgba(122,162,247,0.65)] hover:brightness-110',
+    ghost:
+      'border border-white/[0.08] bg-white/[0.02] text-[#E8ECF4] hover:border-white/[0.16] hover:bg-white/[0.05]',
+    danger:
+      'border border-rose-500/30 bg-rose-500/[0.08] text-rose-300 hover:bg-rose-500/[0.16]',
+  } as const;
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${sizes[size]} ${variants[variant]}`}
+    >
+      {icon}
+      {children}
+    </button>
+  );
+}
+
+/** Two-step destructive action (dark). Auto-resets after 4s. */
+function ConfirmButton({
+  label,
+  confirmLabel,
+  onConfirm,
+}: {
+  label: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  return (
+    <DarkButton
+      variant={confirming ? 'danger' : 'ghost'}
+      size="sm"
+      onClick={() => {
+        if (confirming) {
+          onConfirm();
+          setConfirming(false);
+        } else {
+          setConfirming(true);
+          window.setTimeout(() => setConfirming(false), 4000);
+        }
+      }}
+    >
+      {confirming ? confirmLabel : label}
+    </DarkButton>
+  );
+}
+
+/** Dark field wrapper - uppercase micro-label + optional hint. */
+function DarkField({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#5A6474]">
+        {label}
+      </span>
+      {children}
+      {hint && <p className="text-[11px] leading-relaxed text-[#5A6474]">{hint}</p>}
+    </div>
+  );
+}
+
+function DarkTextInput({
+  value,
+  onChange,
+  onBlur,
+  placeholder,
+  autoFocus,
+}: {
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: () => void;
+  placeholder?: string;
+  autoFocus?: boolean;
+}) {
+  return (
+    <input
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      placeholder={placeholder}
+      autoFocus={autoFocus}
+      className={INPUT_CLASS}
+    />
+  );
+}
+
+function DarkNumberInput({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return <input type="number" value={value} onChange={onChange} className={INPUT_CLASS} />;
+}
+
+/** Dark empty state - no gray boxes, stays on the dark canvas. */
+function DarkEmptyBlock({ icon, title, hint }: { icon: ReactNode; title: string; hint: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center">
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.03] text-[#5A6474]">
+        {icon}
+      </div>
+      <p className="text-[13px] font-semibold text-[#96A0B0]">{title}</p>
+      <p className="max-w-xs text-[11.5px] leading-relaxed text-[#5A6474]">{hint}</p>
+    </div>
+  );
+}
+
+/* ---------------- Editor ---------------- */
 
 export function WorkspaceEditor({ camera }: { camera: Camera }): JSX.Element {
   const { controller } = useVision();
@@ -92,15 +296,19 @@ export function WorkspaceEditor({ camera }: { camera: Camera }): JSX.Element {
   };
 
   return (
-    <Card
-      title={`Desk Calibration — ${camera.label}`}
+    <DarkPanel
+      title={`Desk Calibration - ${camera.label}`}
       subtitle="Click on the video canvas to plot normalized polygon boundary points for workspace desk zones"
-      actions={<Badge tone={running ? 'green' : 'zinc'} dot>{running ? 'Camera Live' : 'Camera Offline'}</Badge>}
+      actions={
+        <DarkBadge tone={running ? 'green' : 'zinc'} dot>
+          {running ? 'Camera Live' : 'Camera Offline'}
+        </DarkBadge>
+      }
     >
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* Visual Stage Container */}
         <div className="flex flex-col">
-          <div className="rounded-xl overflow-hidden border border-saas-border bg-slate-900 p-2 sm:p-4">
+          <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#04060A] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] sm:p-3">
             <CameraStage cameraId={camera.id} videoSize={snapshot?.videoSize ?? null}>
               {(dims) =>
                 dims && dims.width > 0 ? (
@@ -149,7 +357,9 @@ export function WorkspaceEditor({ camera }: { camera: Camera }): JSX.Element {
                               text={zone.name}
                               fontSize={LABEL_FONT_SIZE}
                               fontStyle="bold"
-                              fill="#ffffff"
+                              fill="#E8ECF4"
+                              shadowColor="rgba(0, 0, 0, 0.75)"
+                              shadowBlur={4}
                             />
                             {selected &&
                               points.map((p, i) => (
@@ -159,7 +369,7 @@ export function WorkspaceEditor({ camera }: { camera: Camera }): JSX.Element {
                                   y={p.y * dims.height}
                                   radius={VERTEX_RADIUS}
                                   fill={SELECTED_STROKE}
-                                  stroke="#ffffff"
+                                  stroke={VERTEX_RING}
                                   strokeWidth={1.5}
                                   draggable
                                   onDragMove={(e) => {
@@ -198,7 +408,7 @@ export function WorkspaceEditor({ camera }: { camera: Camera }): JSX.Element {
                               y={p.y * dims.height}
                               radius={VERTEX_RADIUS}
                               fill={DRAFT_STROKE}
-                              stroke="#ffffff"
+                              stroke={VERTEX_RING}
                               strokeWidth={1.5}
                             />
                           ))}
@@ -211,7 +421,8 @@ export function WorkspaceEditor({ camera }: { camera: Camera }): JSX.Element {
             </CameraStage>
           </div>
           {!running && (
-            <p className="mt-2 text-xs text-saas-secondary">
+            <p className="mt-2.5 flex items-center gap-2 text-[11.5px] text-[#5A6474]">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#F0B26B]" />
               Camera is currently stopped. Start the camera feed to calibrate desk boundaries over real-time video frames.
             </p>
           )}
@@ -220,55 +431,55 @@ export function WorkspaceEditor({ camera }: { camera: Camera }): JSX.Element {
         {/* Action & Zones Aside Panel */}
         <aside className="flex flex-col gap-4">
           {drawing ? (
-            <Card
+            <DarkPanel
               title="Draw Polygon Boundary"
-              subtitle="Left click to place vertex, right click to undo"
+              subtitle="Left click to place vertex · right click to undo"
             >
               <div className="flex flex-col gap-3">
-                <Field label="Desk Zone Name">
-                  <TextInput
+                <DarkField label="Desk Zone Name">
+                  <DarkTextInput
                     value={draftName}
                     onChange={(e) => setDraftName(e.target.value)}
                     placeholder="e.g. Desk A1"
                     autoFocus
                   />
-                </Field>
-                <Field
+                </DarkField>
+                <DarkField
                   label="Zone Priority"
                   hint="Higher priority resolves ties when tracks intersect multiple overlapping desks"
                 >
-                  <NumberInput
+                  <DarkNumberInput
                     value={draftPriority}
                     onChange={(e) => {
                       const v = e.target.valueAsNumber;
                       if (Number.isFinite(v)) setDraftPriority(v);
                     }}
                   />
-                </Field>
-                <p className="text-xs font-medium text-saas-secondary">
+                </DarkField>
+                <p className="text-[11.5px] font-medium text-[#96A0B0]">
                   {draftPoints.length} vertices placed (minimum 3 required)
                 </p>
                 <div className="flex gap-2 pt-1">
-                  <Button
+                  <DarkButton
                     variant="primary"
                     size="sm"
                     disabled={!isValidZonePolygon(draftPoints) || draftName.trim() === ''}
                     onClick={finishDraft}
                   >
                     Finish Zone
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={cancelDraft}>
+                  </DarkButton>
+                  <DarkButton variant="ghost" size="sm" onClick={cancelDraft}>
                     Cancel
-                  </Button>
+                  </DarkButton>
                 </div>
               </div>
-            </Card>
+            </DarkPanel>
           ) : (
-            <Card
+            <DarkPanel
               title="Zone Calibration"
               subtitle="Map desks in normalized frame coordinates"
               actions={
-                <Button
+                <DarkButton
                   variant="primary"
                   size="sm"
                   icon={<Plus size={14} />}
@@ -278,23 +489,24 @@ export function WorkspaceEditor({ camera }: { camera: Camera }): JSX.Element {
                   }}
                 >
                   Draw New Zone
-                </Button>
+                </DarkButton>
               }
             >
-              <p className="text-xs leading-relaxed text-saas-secondary">
-                Click "Draw New Zone" and click vertices around desks. Coordinates automatically scale across resolutions.
+              <p className="text-[11.5px] leading-relaxed text-[#5A6474]">
+                Click "Draw New Zone" and click vertices around desks. Coordinates automatically
+                scale across resolutions.
               </p>
-            </Card>
+            </DarkPanel>
           )}
 
           {/* Existing Zones List */}
-          <Card
+          <DarkPanel
             title={`Configured Zones (${zones.length})`}
             subtitle="Click zone to inspect or drag vertices to modify"
           >
             {zones.length === 0 ? (
-              <EmptyState
-                icon={<Layers size={24} />}
+              <DarkEmptyBlock
+                icon={<Layers size={18} />}
                 title="No zones mapped yet"
                 hint="Draw a desk zone polygon above to derive desk occupancy."
               />
@@ -305,10 +517,10 @@ export function WorkspaceEditor({ camera }: { camera: Camera }): JSX.Element {
                   return (
                     <li
                       key={zone.id}
-                      className={`rounded-lg border p-3 transition-colors ${
+                      className={`rounded-xl border p-3 transition-all duration-200 ${
                         selected
-                          ? 'border-saas-success bg-saas-success-light/40 shadow-subtle'
-                          : 'border-saas-border bg-white hover:border-gray-300'
+                          ? 'border-[#4ADE80]/30 bg-[#4ADE80]/[0.06] shadow-[0_8px_24px_-14px_rgba(74,222,128,0.4)]'
+                          : 'border-white/[0.08] bg-white/[0.02] hover:border-white/[0.18]'
                       }`}
                     >
                       <button
@@ -316,42 +528,41 @@ export function WorkspaceEditor({ camera }: { camera: Camera }): JSX.Element {
                         onClick={() => setSelectedZoneId(selected ? null : zone.id)}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-saas-primary">{zone.name}</span>
-                          <Badge tone="zinc">P{zone.priority}</Badge>
+                          <span className="text-[12px] font-semibold text-[#E8ECF4]">{zone.name}</span>
+                          <DarkBadge tone="zinc">P{zone.priority}</DarkBadge>
                         </div>
-                        <span className="text-[11px] text-saas-secondary font-medium">
+                        <span className="text-[11px] font-medium text-[#5A6474]">
                           {zone.points.length} vertices
                         </span>
                       </button>
 
                       {selected && (
-                        <div className="mt-3 flex flex-col gap-2.5 border-t border-saas-border pt-3">
-                          <Field label="Rename Zone">
-                            <TextInput
+                        <div className="mt-3 flex flex-col gap-2.5 border-t border-white/[0.06] pt-3">
+                          <DarkField label="Rename Zone">
+                            <DarkTextInput
                               value={nameEdit}
                               onChange={(e) => setNameEdit(e.target.value)}
                               onBlur={() => {
                                 if (nameEdit.trim() !== '') updateSelectedZone({ name: nameEdit.trim() });
                               }}
                             />
-                          </Field>
-                          <Field label="Priority Level">
-                            <NumberInput
+                          </DarkField>
+                          <DarkField label="Priority Level">
+                            <DarkNumberInput
                               value={zone.priority}
                               onChange={(e) => {
                                 const v = e.target.valueAsNumber;
                                 if (Number.isFinite(v)) updateSelectedZone({ priority: Math.round(v) });
                               }}
                             />
-                          </Field>
-                          <p className="text-[11px] text-saas-secondary font-medium">
-                            Drag the green vertices on the camera canvas to reshape.
+                          </DarkField>
+                          <p className="text-[11px] font-medium text-[#5A6474]">
+                            Drag the glowing green vertices on the camera canvas to reshape.
                           </p>
                           <div className="pt-1">
                             <ConfirmButton
                               label="Delete Desk Zone"
                               confirmLabel="Confirm Delete?"
-                              size="sm"
                               onConfirm={() => {
                                 controller.deleteZone(zone.id);
                                 setSelectedZoneId(null);
@@ -365,10 +576,10 @@ export function WorkspaceEditor({ camera }: { camera: Camera }): JSX.Element {
                 })}
               </ul>
             )}
-          </Card>
+          </DarkPanel>
         </aside>
       </div>
-    </Card>
+    </DarkPanel>
   );
 }
 

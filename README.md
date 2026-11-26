@@ -1,4 +1,4 @@
-# Employee Vision AI — Enterprise Suite
+# Employee Vision AI - Enterprise Suite
 
 A high-performance, edge-first browser application for workplace occupancy and activity observation. Person detection (TensorFlow.js COCO-SSD) and body pose estimation (MediaPipe PoseLandmarker) run entirely in client WebGL memory; users draw desk zones per camera, manually identify employees, and the app derives occupancy, posture, and observable-activity states with temporal smoothing.
 

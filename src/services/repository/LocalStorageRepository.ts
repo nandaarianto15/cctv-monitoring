@@ -1,5 +1,5 @@
 /**
- * localStorage-backed repository. Persists metadata only — video frames are
+ * localStorage-backed repository. Persists metadata only - video frames are
  * never stored. Events are kept in a FIFO buffer capped at the configured
  * retention limit.
  */
@@ -164,7 +164,7 @@ export class LocalStorageRepository implements VisionRepository {
 
 function defaultStorage(): KVStorage {
   if (typeof localStorage === 'undefined') {
-    throw new Error('localStorage is not available in this environment — inject a KVStorage implementation.');
+    throw new Error('localStorage is not available in this environment - inject a KVStorage implementation.');
   }
   return localStorage;
 }

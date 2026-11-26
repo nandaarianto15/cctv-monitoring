@@ -22,7 +22,7 @@ export function CamerasPage(): JSX.Element {
       setDevices(list);
       setDeviceError(null);
     } catch {
-      setDeviceError('Could not enumerate camera devices — camera APIs require HTTPS (or localhost).');
+      setDeviceError('Could not enumerate camera devices - camera APIs require HTTPS (or localhost).');
     }
   }, []);
 
@@ -87,7 +87,7 @@ export function CamerasPage(): JSX.Element {
       {cameras.length === 0 ? (
         <EmptyState
           title="No cameras configured"
-          hint="Add your laptop/USB camera, or a phone camera. Phones require HTTPS — see the README (ngrok / Vercel)."
+          hint="Add your laptop/USB camera, or a phone camera. Phones require HTTPS - see the README (ngrok / Vercel)."
         />
       ) : (
         <div className="grid gap-6 2xl:grid-cols-2">

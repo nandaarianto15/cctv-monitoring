@@ -47,7 +47,7 @@ export interface CameraPipelineCallbacks {
   getConfig(): AppConfig;
   getAssignment(trackId: Id): TrackAssignment | null;
   onEvent(event: VisionEvent): void;
-  /** A track expired — its assignment (if any) must be invalidated. */
+  /** A track expired - its assignment (if any) must be invalidated. */
   onTrackExpired(cameraId: Id, trackId: Id): void;
   onSnapshot(): void;
   now(): number;
@@ -442,7 +442,7 @@ export class CameraPipeline {
         );
       });
       // A LOST track whose last match was this zone means "occluded, maybe
-      // still there" — hold (null) instead of reporting the desk empty.
+      // still there" - hold (null) instead of reporting the desk empty.
       const lostInZone = tracks.some((t) => {
         const proc = this.trackProcessing.get(t.trackId);
         return (

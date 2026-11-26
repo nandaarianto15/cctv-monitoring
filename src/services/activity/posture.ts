@@ -67,7 +67,7 @@ export function estimatePosture(
     }
   }
 
-  // Signal 3: body compactness — independent of ankle visibility. A seated
+  // Signal 3: body compactness - independent of ankle visibility. A seated
   // person's bbox is much shorter relative to their torso than a standing one.
   let bodyCompactness: number | null = null;
   if (shoulder && hip && trackBBox.height > 1e-6) {

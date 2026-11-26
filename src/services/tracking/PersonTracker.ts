@@ -30,7 +30,7 @@ export interface TrackedPerson {
 export interface TrackerUpdateResult {
   /** All live tracks (TENTATIVE, CONFIRMED and LOST within expiry), in creation order. */
   tracks: TrackedPerson[];
-  /** Tracks removed this update — their assignments must be invalidated. */
+  /** Tracks removed this update - their assignments must be invalidated. */
   expired: TrackedPerson[];
   /** Tracks that became CONFIRMED on this update. */
   confirmedNow: Id[];

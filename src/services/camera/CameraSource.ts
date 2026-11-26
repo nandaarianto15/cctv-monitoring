@@ -26,7 +26,7 @@ export class GetUserMediaCameraSource implements CameraSource {
 
   async start(): Promise<MediaStream> {
     if (!navigator.mediaDevices?.getUserMedia) {
-      // Insecure context (plain HTTP on a non-localhost host) — see README.
+      // Insecure context (plain HTTP on a non-localhost host) - see README.
       throw new TypeError('getUserMedia is unavailable (requires HTTPS or localhost).');
     }
     const video: MediaTrackConstraints = {

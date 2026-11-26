@@ -27,7 +27,7 @@ export interface VisionRepository {
   saveAssignment(assignment: TrackAssignment): void;
   deleteAssignment(trackId: string): void;
 
-  // Events — chronological (oldest first), FIFO-capped at retentionLimit
+  // Events - chronological (oldest first), FIFO-capped at retentionLimit
   listEvents(limit?: number): VisionEvent[];
   addEvent(event: VisionEvent): void;
   clearEvents(): void;

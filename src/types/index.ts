@@ -1,5 +1,5 @@
 /**
- * Domain types — the single source of truth for data shapes shared between
+ * Domain types - the single source of truth for data shapes shared between
  * services, persistence and UI.
  */
 

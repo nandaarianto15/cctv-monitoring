@@ -1,6 +1,7 @@
 /**
  * Small per-minute event histogram (last 15 minutes) — pure SVG, no chart
  * library. Bins by wall-clock minute.
+ * Vyra dark treatment: Vyra-blue bars on the dark canvas.
  */
 import { useMemo } from 'react';
 import type { VisionEvent } from '../../types';
@@ -9,6 +10,8 @@ const WINDOW_MINUTES = 15;
 const VIEW_WIDTH = 300;
 const VIEW_HEIGHT = 60;
 const BAR_GAP = 3;
+const BAR_FILL = '#7AA2F7'; // Vyra blue
+const EMPTY_FILL = 'rgba(148, 163, 198, 0.16)';
 
 export function EventHistogram({ events, now = Date.now() }: { events: VisionEvent[]; now?: number }) {
   const { bins, maxCount } = useMemo(() => {
@@ -26,7 +29,7 @@ export function EventHistogram({ events, now = Date.now() }: { events: VisionEve
   const plotHeight = VIEW_HEIGHT - 12;
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <svg
         viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
         className="h-16 w-full"
@@ -44,13 +47,13 @@ export function EventHistogram({ events, now = Date.now() }: { events: VisionEve
               width={barWidth}
               height={barHeight}
               rx={1.5}
-              fill={count === 0 ? '#3f3f46' : '#38bdf8'}
-              opacity={count === 0 ? 0.5 : 0.9}
+              fill={count === 0 ? EMPTY_FILL : BAR_FILL}
+              opacity={count === 0 ? 1 : 0.9}
             />
           );
         })}
       </svg>
-      <div className="flex justify-between text-[10px] text-zinc-600">
+      <div className="flex justify-between text-[10px] font-medium text-[#5A6474]">
         <span>-{WINDOW_MINUTES}m</span>
         <span>{maxCount > 1 ? `peak ${maxCount}/min` : 'events/min'}</span>
         <span>now</span>

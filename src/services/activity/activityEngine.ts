@@ -2,7 +2,7 @@
  * Raw activity classification (before temporal smoothing).
  *
  * WORKING requires all of: IN_ZONE, SITTING, and a positive observable work
- * indicator. Insufficient evidence yields UNKNOWN — posture and occupancy
+ * indicator. Insufficient evidence yields UNKNOWN - posture and occupancy
  * alone never prove productivity.
  */
 import type { ActivityState, OccupancyState, PostureState } from '../../types';

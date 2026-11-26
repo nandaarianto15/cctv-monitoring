@@ -17,7 +17,7 @@ export function formatDateTime(ts: number): string {
 }
 
 export function formatDuration(ms: number): string {
-  if (ms < 0 || !Number.isFinite(ms)) return '—';
+  if (ms < 0 || !Number.isFinite(ms)) return '-';
   if (ms < 1000) return `${Math.round(ms)}ms`;
   const seconds = ms / 1000;
   if (seconds < 60) return `${seconds.toFixed(1)}s`;

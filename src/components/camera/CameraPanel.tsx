@@ -1,39 +1,168 @@
 /**
  * CameraPanel: one configured camera with its live stage, stats, tracked
- * persons and desk summary. Start/stop drives the isolated per-camera
- * pipeline; errors surface with a reconnect action.
+ * persons and desk summary - Vyra dark theme, self-contained primitives.
+ * Start/stop drives the isolated per-camera pipeline; errors surface with
+ * a reconnect action.
  */
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { Camera, CameraRunStatus, Employee } from '../../types';
 import { useVision } from '../../state/VisionContext';
 import { useEmployeeNames, useVisionSnapshot, useZones } from '../../hooks/useVision';
-import { Badge, Button, ConfirmButton, LoadingState, StateBadge, type BadgeTone } from '../ui/primitives';
 import { CameraStage } from './CameraStage';
 import { PersonOverlay } from './PersonOverlay';
 import { TrackCard } from './TrackCard';
 import { Video, AlertCircle, Layers, Users } from '../icons';
 
-const CAMERA_STATUS_TONE: Record<CameraRunStatus, BadgeTone> = {
-  idle: 'zinc',
-  starting: 'amber',
-  running: 'green',
-  error: 'rose',
-};
+/* ---------------- Local Vyra primitives (kept in-file) ---------------- */
 
-const CAMERA_STATUS_LABEL: Record<CameraRunStatus, string> = {
-  idle: 'Offline',
-  starting: 'Starting…',
-  running: 'Live Feed',
-  error: 'Error',
+type PillTone = 'green' | 'amber' | 'red' | 'neutral' | 'accent';
+
+const PILL_TONES = {
+  green: { cls: 'border-[#4ADE80]/20 bg-[#4ADE80]/[0.08] text-[#6EE7A0]', dot: 'bg-[#4ADE80]' },
+  amber: { cls: 'border-[#E8A33D]/25 bg-[#E8A33D]/[0.08] text-[#E8B25C]', dot: 'bg-[#E8A33D]' },
+  red: { cls: 'border-[#F87171]/20 bg-[#F87171]/[0.08] text-[#F8A5A5]', dot: 'bg-[#F87171]' },
+  neutral: { cls: 'border-white/[0.08] bg-white/[0.03] text-[#96A0B0]', dot: 'bg-[#7E8899]' },
+  accent: { cls: 'border-[#7AA2F7]/25 bg-[#7AA2F7]/[0.10] text-[#A8C4FF]', dot: 'bg-[#7AA2F7]' },
+} as const;
+
+/** Small status pill - pulse only for transient states (live/starting/error). */
+function Pill({
+  tone,
+  dot = false,
+  children,
+}: {
+  tone: PillTone;
+  dot?: boolean;
+  children: ReactNode;
+}) {
+  const t = PILL_TONES[tone];
+  const pulse = tone === 'green' || tone === 'amber' || tone === 'red';
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${t.cls}`}>
+      {dot && <span className={`h-1.5 w-1.5 rounded-full ${t.dot} ${pulse ? 'animate-pulse' : ''}`} />}
+      {children}
+    </span>
+  );
+}
+
+function GhostButton({
+  children,
+  onClick,
+  disabled,
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-2.5 py-1.5 text-[11px] font-medium text-[#96A0B0] transition-colors hover:border-white/[0.16] hover:text-[#E8ECF4] disabled:pointer-events-none disabled:opacity-40"
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Per-card primary action - accent tint, no gradient (gradient stays page-level). */
+function SoftButton({
+  children,
+  onClick,
+  disabled,
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-lg border border-[#7AA2F7]/25 bg-[#7AA2F7]/10 px-2.5 py-1.5 text-[11px] font-semibold text-[#A8C4FF] transition-colors hover:border-[#7AA2F7]/40 hover:bg-[#7AA2F7]/20 disabled:pointer-events-none disabled:opacity-40"
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Two-step destructive action: click once to arm, again to confirm. */
+function ConfirmButton({
+  label,
+  confirmLabel,
+  onConfirm,
+}: {
+  label: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+}) {
+  const [arming, setArming] = useState(false);
+  const timer = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (timer.current !== null) window.clearTimeout(timer.current);
+    },
+    [],
+  );
+  const handleClick = () => {
+    if (!arming) {
+      setArming(true);
+      timer.current = window.setTimeout(() => setArming(false), 3000);
+      return;
+    }
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    setArming(false);
+    onConfirm();
+  };
+  return (
+    <button
+      onClick={handleClick}
+      className={`rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+        arming
+          ? 'border-[#F87171]/40 bg-[#F87171]/10 text-[#F8A5A5] hover:bg-[#F87171]/20'
+          : 'border-white/[0.08] bg-white/[0.02] text-[#96A0B0] hover:border-white/[0.16] hover:text-[#E8ECF4]'
+      }`}
+    >
+      {arming ? confirmLabel : label}
+    </button>
+  );
+}
+
+/** Dark spinner + label, replaces the old LoadingState primitive. */
+function LoadingState({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-2.5">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/[0.08] border-t-[#7AA2F7]" />
+      <p className="text-[11px] font-medium text-[#67717F]">{label}</p>
+    </div>
+  );
+}
+
+/* ---------------- Status mapping ---------------- */
+
+const CAMERA_STATUS: Record<CameraRunStatus, { label: string; tone: PillTone }> = {
+  idle: { label: 'Offline', tone: 'neutral' },
+  starting: { label: 'Starting…', tone: 'amber' },
+  running: { label: 'Live Feed', tone: 'green' },
+  error: { label: 'Error', tone: 'red' },
 };
 
 /** Camera pipeline status (offline / starting / live / error). */
 export function CameraStatusBadge({ status }: { status: CameraRunStatus }) {
+  const s = CAMERA_STATUS[status];
   return (
-    <Badge tone={CAMERA_STATUS_TONE[status]} dot>
-      {CAMERA_STATUS_LABEL[status]}
-    </Badge>
+    <Pill tone={s.tone} dot>
+      {s.label}
+    </Pill>
   );
+}
+
+/** Desk occupancy state - occupied earns the blue accent, everything else neutral. */
+function DeskStatePill({ state }: { state: string }) {
+  if (state === 'OCCUPIED') return <Pill tone="accent">Occupied</Pill>;
+  if (state === 'VACANT' || state === 'FREE') return <Pill tone="neutral">Vacant</Pill>;
+  return <Pill tone="neutral">{state}</Pill>;
 }
 
 export function CameraPanel({
@@ -63,42 +192,41 @@ export function CameraPanel({
 
   const placeholder =
     snapshot.modelsError && status !== 'running' ? (
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center bg-saas-bg">
-        <AlertCircle size={28} className="text-saas-error" />
-        <p className="text-xs font-medium text-saas-error">{snapshot.modelsError}</p>
-        <Button variant="secondary" size="sm" onClick={() => void controller.startCamera(camera.id)}>
-          Retry Model Load
-        </Button>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center bg-[#0A0D13]/95">
+        <AlertCircle size={28} className="text-[#F87171]" />
+        <p className="text-xs font-medium text-[#F8A5A5]">{snapshot.modelsError}</p>
+        <GhostButton onClick={() => void controller.startCamera(camera.id)}>Retry Model Load</GhostButton>
       </div>
     ) : snapshot.modelsLoading || starting ? (
-      <div className="absolute inset-0 flex items-center justify-center bg-saas-bg">
+      <div className="absolute inset-0 flex items-center justify-center bg-[#0A0D13]/95">
         <LoadingState label={snapshot.modelsLoading ? 'Loading AI Vision Models…' : 'Initializing Camera Feed…'} />
       </div>
     ) : camSnapshot?.error ? (
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center bg-saas-bg">
-        <AlertCircle size={28} className="text-saas-error" />
-        <p className="text-xs font-medium text-saas-error">{camSnapshot.error}</p>
-        <Button variant="secondary" size="sm" onClick={() => void controller.startCamera(camera.id)}>
-          Reconnect Stream
-        </Button>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center bg-[#0A0D13]/95">
+        <AlertCircle size={28} className="text-[#F87171]" />
+        <p className="text-xs font-medium text-[#F8A5A5]">{camSnapshot.error}</p>
+        <GhostButton onClick={() => void controller.startCamera(camera.id)}>Reconnect Stream</GhostButton>
       </div>
     ) : undefined;
 
   return (
-    <div className="flex flex-col rounded-xl border border-saas-border bg-white shadow-subtle overflow-hidden">
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02]">
       {/* Header bar */}
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-saas-border bg-white px-5 py-3.5">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.05] bg-white/[0.01] px-5 py-3.5">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-saas-bg text-saas-secondary">
-            <Video size={16} />
+          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.04]">
+            <Video size={15} className={running ? 'text-[#9DB9FF]' : 'text-[#5A6474]'} />
+            {running && (
+              <span className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-pulse rounded-full bg-[#4ADE80] ring-2 ring-[#10141C]" />
+            )}
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold tracking-tight text-saas-primary">{camera.label}</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-[13.5px] font-semibold tracking-[-0.01em] text-[#E8ECF4]">{camera.label}</h2>
               <CameraStatusBadge status={status} />
             </div>
             {running && stats && (
-              <span className="text-[11px] font-medium text-saas-secondary">
+              <span className="text-[11px] font-medium tabular-nums text-[#67717F]">
                 {stats.inferenceFps.toFixed(1)} FPS · {stats.lastInferenceMs.toFixed(0)} ms latency
                 {camSnapshot?.videoSize ? ` · ${camSnapshot.videoSize.width}×${camSnapshot.videoSize.height}` : ''}
               </span>
@@ -108,33 +236,27 @@ export function CameraPanel({
 
         <div className="flex items-center gap-2">
           {running ? (
-            <Button variant="secondary" size="sm" onClick={() => controller.stopCamera(camera.id)}>
-              Stop Stream
-            </Button>
+            <GhostButton onClick={() => controller.stopCamera(camera.id)}>Stop Stream</GhostButton>
           ) : (
-            <Button
-              variant="primary"
-              size="sm"
+            <SoftButton
               disabled={snapshot.modelsLoading || starting}
               onClick={() => void controller.startCamera(camera.id)}
             >
               {status === 'error' ? 'Reconnect' : 'Start Feed'}
-            </Button>
+            </SoftButton>
           )}
           {!isLiveMonitoring && (
             <ConfirmButton
               label="Delete"
               confirmLabel="Delete camera?"
-              variant="ghost"
-              size="sm"
               onConfirm={() => controller.deleteCamera(camera.id)}
             />
           )}
         </div>
       </header>
 
-      {/* Video & detection stage */}
-      <div className="bg-slate-900 p-2 sm:p-4">
+      {/* Video & detection stage - deep inset canvas */}
+      <div className="bg-[#05070B] p-2 sm:p-4">
         <CameraStage
           cameraId={camera.id}
           videoSize={camSnapshot?.videoSize ?? null}
@@ -155,23 +277,23 @@ export function CameraPanel({
         </CameraStage>
       </div>
 
-      {/* Live Information & Tracked Person Assignment Panel */}
-      <div className="flex flex-col gap-4 border-t border-saas-border bg-saas-bg/40 p-5">
+      {/* Live information & tracked person assignment */}
+      <div className="flex flex-col gap-4 border-t border-white/[0.05] bg-white/[0.01] p-5">
         {/* Desks occupancy summary */}
         {desks.length > 0 && (
           <div>
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-saas-secondary uppercase tracking-wider mb-2">
-              <Layers size={14} />
+            <div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#5A6474]">
+              <Layers size={12} />
               <span>Workspace Desk Zones ({desks.length})</span>
             </div>
             <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
               {desks.map((d) => (
                 <div
                   key={d.zoneId}
-                  className="flex items-center justify-between rounded-lg border border-saas-border bg-white px-3 py-2 shadow-subtle"
+                  className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2 transition-colors hover:bg-white/[0.04]"
                 >
-                  <span className="text-xs font-semibold text-saas-primary">{d.name}</span>
-                  <StateBadge state={d.state} />
+                  <span className="truncate text-[12px] font-semibold text-[#E8ECF4]">{d.name}</span>
+                  <DeskStatePill state={d.state} />
                 </div>
               ))}
             </div>
@@ -180,18 +302,16 @@ export function CameraPanel({
 
         {/* Tracked persons */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-saas-secondary uppercase tracking-wider">
-              <Users size={14} />
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#5A6474]">
+              <Users size={12} />
               <span>Active Person Tracks ({tracks.length})</span>
             </span>
-            <span className="text-[11px] text-saas-secondary">
-              Temporary tracking IDs · Manual identification
-            </span>
+            <span className="text-[11px] text-[#5A6474]">Temporary tracking IDs · Manual identification</span>
           </div>
 
           {tracks.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-saas-border bg-white/50 px-4 py-3 text-xs text-saas-secondary text-center">
+            <p className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-center text-[11.5px] text-[#5A6474]">
               {running
                 ? 'No persons currently detected in frame.'
                 : 'Start the camera stream to detect persons and derive telemetry.'}

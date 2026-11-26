@@ -27,7 +27,7 @@ export class VisionController {
   private modelsError: string | null = null;
   private snapshot: VisionSnapshot;
   private readonly listeners = new Set<() => void>();
-  /** Bumped on every mutation — lets React re-read repository data. */
+  /** Bumped on every mutation - lets React re-read repository data. */
   private version = 0;
 
   constructor(

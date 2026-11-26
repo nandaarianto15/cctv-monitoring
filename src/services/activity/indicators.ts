@@ -1,6 +1,6 @@
 /**
  * Observable work indicators. WORKING is never inferred from posture or
- * inactivity alone — it requires the conjunction of occupancy, posture and at
+ * inactivity alone - it requires the conjunction of occupancy, posture and at
  * least one *observable* indicator (default: wrist near the desk zone).
  * A `null` indicator means "not observable" and never counts as evidence.
  */

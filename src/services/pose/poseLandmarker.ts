@@ -1,10 +1,10 @@
 /**
  * MediaPipe PoseLandmarker adapter (VIDEO running mode, numPoses from config).
- * Landmarks are normalized 0..1 relative to the input frame — the same basis
+ * Landmarks are normalized 0..1 relative to the input frame - the same basis
  * as our bounding boxes. Visibility defaults to 0 when MediaPipe omits it:
  * missing evidence is treated as "not observed", never as a positive signal.
  *
- * tasks-vision is imported dynamically — the wasm/model assets are only
+ * tasks-vision is imported dynamically - the wasm/model assets are only
  * fetched when pose estimation is actually needed.
  */
 import type { PoseLandmarker } from '@mediapipe/tasks-vision';
@@ -35,7 +35,7 @@ export class MediaPipePoseDetector implements PoseDetector {
         baseOptions: { ...options.baseOptions, delegate: 'GPU' },
       });
     } catch {
-      // Some devices/drivers reject the GPU delegate — fall back to CPU.
+      // Some devices/drivers reject the GPU delegate - fall back to CPU.
       landmarker = await PoseLandmarker.createFromOptions(fileset, {
         ...options,
         baseOptions: { ...options.baseOptions, delegate: 'CPU' },

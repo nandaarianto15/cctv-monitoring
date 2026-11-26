@@ -1,6 +1,6 @@
 /**
  * Central configuration. Every tunable threshold lives here (or in persisted
- * user overrides of this shape) — there are no magic numbers in business logic.
+ * user overrides of this shape) - there are no magic numbers in business logic.
  */
 
 export interface AppConfig {

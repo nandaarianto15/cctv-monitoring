@@ -85,7 +85,7 @@ describe('PersonTracker', () => {
     const tracker = new PersonTracker({ ...OPTS, bboxSmoothing: 0.5 });
     tracker.update([det(0.1, 0.1)], 1000);
     const result = tracker.update([det(0.2, 0.1)], 1100);
-    // 0.1 * 0.5 + 0.2 * 0.5 — the two boxes overlap enough to match (IoU ≈ 0.33).
+    // 0.1 * 0.5 + 0.2 * 0.5 - the two boxes overlap enough to match (IoU ≈ 0.33).
     expect(result.tracks[0]!.bbox.x).toBeCloseTo(0.15);
   });
 
